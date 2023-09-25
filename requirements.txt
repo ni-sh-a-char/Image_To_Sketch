@@ -1,0 +1,6 @@
+streamlit
+numpy
+imageio
+scipy
+opencv-python-headless
+Pillow
