@@ -1,252 +1,241 @@
 # Image_To_Sketch  
-**A simple Python program to convert an image into a sketch.**  
+*A simple Python program to convert an image into a sketch.*
 
 ---  
 
 ## Table of Contents
-1. [Overview](#overview)  
-2. [Installation](#installation)  
-3. [Quick Start (CLI)](#quick-start-cli)  
-4. [Python API](#python-api)  
-5. [Examples](#examples)  
-6. [Project Structure](#project-structure)  
-7. [Contributing](#contributing)  
-8. [License](#license)  
+- [Overview](#overview)  
+- [Installation](#installation)  
+- [Quick Start (CLI)](#quick-start-cli)  
+- [Python API](#python-api)  
+- [Examples](#examples)  
+- [Project Structure](#project-structure)  
+- [Testing](#testing)  
+- [Contributing](#contributing)  
+- [License](#license)  
 
 ---  
 
-## Overview <a name="overview"></a>
+## Overview  
 
-`Image_To_Sketch` provides a lightweight, dependency‑minimal way to turn any raster image (JPG, PNG, BMP, …) into a pencil‑style sketch.  
-The core algorithm is based on OpenCV’s **grayscale → Gaussian blur → dodge blend** technique, which works well for both portraits and landscapes.
+`Image_To_Sketch` provides a lightweight, dependency‑friendly way to turn any photograph (or raster image) into a pencil‑style sketch.  
+The core algorithm is based on classic image‑processing techniques (grayscale conversion, Gaussian blur, and dodge blending) implemented with **OpenCV** and **NumPy**.  
 
-Features  
+You can use it in three ways:
 
-| Feature | Description |
-|---------|-------------|
-| ✅ Pure Python + OpenCV (no heavy ML models) |
-| 🖥️ Command‑line interface (CLI) for one‑off conversions |
-| 📦 Re‑usable Python API for integration in other projects |
-| 🎨 Adjustable parameters (blur kernel size, sketch intensity) |
-| 🧩 Works on Windows, macOS, Linux (Python 3.8+) |
+1. **Command‑line interface (CLI)** – one‑liner conversion.  
+2. **Python library** – call the functions from your own code.  
+3. **Web/GUI wrappers** – the library is deliberately kept UI‑agnostic so you can embed it anywhere.  
 
 ---  
 
-## Installation <a name="installation"></a>
+## Installation  
 
 ### 1. Prerequisites  
 
-| Requirement | Minimum version |
-|-------------|-----------------|
+| Tool | Minimum version |
+|------|-----------------|
 | Python | 3.8 |
-| pip | 21.0+ |
-| Git (optional) | – |
+| pip   | 21.0+ |
+| Git   | optional (for cloning) |
 
-> **Note** – The only non‑standard library dependency is **OpenCV‑Python**. All other modules are part of the Python standard library.
-
-### 2. Clone the repository  
+### 2. Install from PyPI (recommended)
 
 ```bash
-git clone https://github.com/yourusername/Image_To_Sketch.git
-cd Image_To_Sketch
+pip install image-to-sketch
 ```
 
-### 3. Install the package (editable mode recommended)
+> The PyPI package bundles the latest stable release and all required dependencies (`opencv-python`, `numpy`, `pillow`).
+
+### 3. Install from source  
 
 ```bash
-# Create a virtual environment (highly recommended)
-python -m venv .venv
-source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+# Clone the repository
+git clone https://github.com/yourusername/Image_To_Sketch.git
+cd Image_To_Sketch
 
-# Install the package and its dependencies
+# Create a virtual environment (optional but recommended)
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+# Install the package in editable mode
 pip install -e .
 ```
 
-The `-e` flag installs the package in *editable* mode, so any changes you make to the source code are immediately reflected without reinstalling.
+### 4. Optional dependencies  
 
-### 4. Verify the installation  
+| Feature | Extra | Packages |
+|---------|-------|----------|
+| GPU‑accelerated OpenCV (if you have CUDA) | `opencv-cuda` | `opencv-contrib-python-headless` |
+| Image format support beyond PNG/JPG (e.g., TIFF, WebP) | `extra-formats` | `pillow[webp,tiff]` |
 
-```bash
-python -c "import image_to_sketch; print(image_to_sketch.__version__)"
-```
-
-You should see the current version string (e.g., `0.2.0`).
-
----  
-
-## Quick Start (CLI) <a name="quick-start-cli"></a>
-
-The repository ships a convenient command‑line tool called **`sketchify`**.
-
-### Basic usage  
+Install extras with:
 
 ```bash
-sketchify input.jpg output.png
-```
-
-- `input.jpg` – Path to the source image.  
-- `output.png` – Desired path for the sketch image (any format supported by OpenCV).
-
-### Advanced options  
-
-```bash
-sketchify input.jpg output.png \
-    --blur-kernel 7 \
-    --scale 1.5 \
-    --invert \
-    --show
-```
-
-| Option | Description |
-|--------|-------------|
-| `--blur-kernel N` | Size of the Gaussian blur kernel (must be odd). Default: `5`. |
-| `--scale FACTOR` | Multiply the final sketch intensity by `FACTOR`. Default: `1.0`. |
-| `--invert` | Produce a *negative* sketch (white lines on black background). |
-| `--show` | Open a preview window (uses OpenCV’s `imshow`). |
-| `-h, --help` | Show the help message. |
-
-### Help output  
-
-```bash
-sketchify -h
-```
-
-```
-usage: sketchify [-h] [--blur-kernel K] [--scale S] [--invert] [--show] input output
-
-Convert an image to a pencil sketch.
-
-positional arguments:
-  input               Path to the input image.
-  output              Path where the sketch will be saved.
-
-optional arguments:
-  -h, --help          show this help message and exit
-  --blur-kernel K     Gaussian blur kernel size (odd integer, default=5)
-  --scale S           Intensity scaling factor (default=1.0)
-  --invert            Invert colors (white sketch on black)
-  --show              Display the result in a window before saving
+pip install image-to-sketch[opencv-cuda,extra-formats]
 ```
 
 ---  
 
-## Python API <a name="python-api"></a>
+## Quick Start (CLI)
 
-The core functionality lives in `image_to_sketch.core`. Import the public functions as shown below.
+The package ships a small command‑line tool called **`sketchify`**.
 
-### Module layout  
-
-```
-image_to_sketch/
-│
-├─ __init__.py          # package version & public symbols
-├─ core.py              # main conversion logic
-├─ utils.py             # helper functions (e.g., loading, saving)
-└─ cli.py               # entry‑point for the `sketchify` console script
+```bash
+sketchify -i path/to/input.jpg -o path/to/output.png
 ```
 
-### Public functions  
+### Arguments
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `convert_to_sketch` | `convert_to_sketch(image: np.ndarray, blur_kernel: int = 5, scale: float = 1.0, invert: bool = False) -> np.ndarray` | Takes a **BGR** OpenCV image array and returns the sketch as a **grayscale** array. |
-| `load_image` | `load_image(path: str, as_gray: bool = False) -> np.ndarray` | Wrapper around `cv2.imread`. Raises `FileNotFoundError` if the file does not exist. |
-| `save_image` | `save_image(image: np.ndarray, path: str) -> None` | Saves a NumPy image to disk using `cv2.imwrite`. Supports all formats OpenCV can write. |
-| `show_image` | `show_image(image: np.ndarray, title: str = "Image") -> None` | Convenience wrapper for `cv2.imshow` + `cv2.waitKey(0)`. |
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-i`, `--input` | Path to the source image (required) | – |
+| `-o`, `--output` | Destination path for the sketch (required) | – |
+| `-b`, `--blur` | Gaussian blur kernel size (must be odd). Larger values give smoother sketches. | `21` |
+| `-c`, `--contrast` | Contrast multiplier for the dodge blend (float). | `1.0` |
+| `-s`, `--scale` | Resize factor (float). Useful for speeding up large images. | `1.0` |
+| `-v`, `--verbose` | Print progress information. | `False` |
 
-#### Example: Using the API directly  
+#### Example: High‑contrast, fast conversion
+
+```bash
+sketchify -i portrait.jpg -o portrait_sketch.png -b 31 -c 1.2 -s 0.5 -v
+```
+
+#### Example: Batch processing
+
+```bash
+for img in images/*.jpg; do
+    sketchify -i "$img" -o "sketches/$(basename "$img" .jpg)_sketch.png"
+done
+```
+
+---  
+
+## Python API  
+
+You can also import the library directly in your Python code.
+
+```python
+from image_to_sketch import Sketcher, utils
+```
+
+### Core Classes & Functions  
+
+| Object | Signature | Description |
+|--------|-----------|-------------|
+| **`Sketcher`** | `Sketcher(blur_kernel: int = 21, contrast: float = 1.0, scale: float = 1.0)` | Main class that holds conversion parameters. |
+| `Sketcher.convert(image: np.ndarray) -> np.ndarray` | Convert a **NumPy** image (BGR) to a sketch. |
+| `Sketcher.convert_path(input_path: str, output_path: str) -> None` | Load an image from disk, convert, and write the result. |
+| **`utils.load_image`** | `load_image(path: str, scale: float = 1.0) -> np.ndarray` | Reads an image with OpenCV, optionally resizes it. |
+| **`utils.save_image`** | `save_image(image: np.ndarray, path: str) -> None` | Writes a BGR/gray image to disk (auto‑detects format). |
+| **`utils.dodge_blend`** | `dodge_blend(gray: np.ndarray, blurred: np.ndarray, contrast: float = 1.0) -> np.ndarray` | Internal helper that implements the classic “dodge” operation. |
+| **`utils.get_version`** | `() -> str` | Returns the current library version. |
+
+#### Example: Using the API
 
 ```python
 import cv2
-from image_to_sketch import convert_to_sketch, load_image, save_image
+from image_to_sketch import Sketcher, utils
 
-# 1️⃣ Load the source image (BGR)
-src = load_image("photos/cat.jpg")
+# Load an image (OpenCV loads as BGR)
+img = utils.load_image('samples/flower.jpg', scale=0.75)
 
-# 2️⃣ Convert to sketch
-sketch = convert_to_sketch(src, blur_kernel=9, scale=1.2, invert=False)
+# Create a Sketcher with custom parameters
+sketcher = Sketcher(blur_kernel=31, contrast=1.2)
 
-# 3️⃣ Save the result
-save_image(sketch, "output/cat_sketch.png")
+# Convert to sketch (still a NumPy array)
+sketch = sketcher.convert(img)
+
+# Show the result with OpenCV (optional)
+cv2.imshow('Sketch', sketch)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Save to disk
+utils.save_image(sketch, 'outputs/flower_sketch.png')
 ```
 
-### Advanced usage  
+#### Advanced: Integrating with Pillow
 
-If you need to process a batch of images or integrate the sketching step into a larger pipeline, you can combine the API with Python’s `concurrent.futures` for parallel execution:
+If you prefer Pillow objects:
 
 ```python
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from image_to_sketch import convert_to_sketch, load_image, save_image
+from PIL import Image
+import numpy as np
+from image_to_sketch import Sketcher, utils
 
-def process_one(in_path: Path, out_path: Path):
-    img = load_image(str(in_path))
-    sketch = convert_to_sketch(img, blur_kernel=7, scale=1.0)
-    save_image(sketch, str(out_path))
+pil_img = Image.open('samples/cat.jpg')
+np_img = np.array(pil_img)[:, :, ::-1]   # Convert RGB -> BGR for OpenCV
 
-input_dir = Path("photos/")
-output_dir = Path("sketches/")
-output_dir.mkdir(exist_ok=True)
+sketch = Sketcher().convert(np_img)
 
-with ThreadPoolExecutor(max_workers=4) as executor:
-    futures = [
-        executor.submit(process_one, p, output_dir / f"{p.stem}_sketch.png")
-        for p in input_dir.glob("*.jpg")
-    ]
-    for f in as_completed(futures):
-        f.result()   # will raise if any worker failed
+# Convert back to Pillow for further processing
+sketch_pil = Image.fromarray(sketch[:, :, 0])  # grayscale
+sketch_pil.save('outputs/cat_sketch.png')
 ```
 
 ---  
 
-## Examples <a name="examples"></a>
+## Examples  
 
-### 1️⃣ Simple CLI conversion  
-
-```bash
-sketchify samples/landscape.jpg sketches/landscape_sketch.png
-```
-
-Result:  
-
-| Original | Sketch |
-|----------|--------|
-| ![landscape](https://raw.githubusercontent.com/yourusername/Image_To_Sketch/main/docs/assets/landscape.jpg) | ![landscape_sketch](https://raw.githubusercontent.com/yourusername/Image_To_Sketch/main/docs/assets/landscape_sketch.png) |
-
----
-
-### 2️⃣ Adjusting blur and intensity  
-
-```bash
-sketchify samples/portrait.jpg sketches/portrait_blur9.png \
-    --blur-kernel 9 --scale 1.5 --show
-```
-
-Increasing the blur kernel smooths out fine texture, while `--scale 1.5` makes the lines darker.
-
----
-
-### 3️⃣ Inverted sketch (white on black)  
-
-```bash
-sketchify samples/flower.png sketches/flower_inverted.png --invert
-```
-
----
-
-### 4️⃣ Using the API in a Jupyter notebook  
+### 1. Simple script (single image)
 
 ```python
+# file: simple_demo.py
+from image_to_sketch import Sketcher, utils
+
+if __name__ == '__main__':
+    sketcher = Sketcher()
+    sketch = sketcher.convert_path('samples/dog.jpg', 'outputs/dog_sketch.png')
+    print('Sketch saved!')
+```
+
+Run:
+
+```bash
+python simple_demo.py
+```
+
+### 2. Batch conversion with progress bar
+
+```python
+# file: batch_demo.py
+import pathlib
+from tqdm import tqdm
+from image_to_sketch import Sketcher
+
+INPUT_DIR  = pathlib.Path('samples')
+OUTPUT_DIR = pathlib.Path('outputs')
+OUTPUT_DIR.mkdir(exist_ok=True)
+
+sketcher = Sketcher(blur_kernel=25, contrast=1.1)
+
+for img_path in tqdm(sorted(INPUT_DIR.glob('*.jpg'))):
+    out_path = OUTPUT_DIR / f'{img_path.stem}_sketch.png'
+    sketcher.convert_path(str(img_path), str(out_path))
+```
+
+```bash
+python batch_demo.py
+```
+
+### 3. Jupyter Notebook snippet
+
+```python
+# In a Jupyter cell
+from image_to_sketch import Sketcher, utils
 import matplotlib.pyplot as plt
-from image_to_sketch import load_image, convert_to_sketch
 
-# Load image
-img = load_image("samples/dog.jpg")
+sketcher = Sketcher(blur_kernel=15, contrast=1.3)
+sketch = sketcher.convert_path('samples/landscape.jpg', 'outputs/landscape_sketch.png')
 
-# Create sketch
-sketch = convert_to_sketch(img, blur_kernel=5, scale=1.0)
-
-# Plot side‑by‑side
-fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-ax[0].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-ax[0].
+# Display side‑by‑side
+orig = utils.load_image('samples/landscape.jpg')
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+ax[0].imshow(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB))
+ax[0].set_title('Original')
+ax[0].axis('off')
+ax[1].imshow(sketch, cmap='gray')
+ax[1].set_title('Sketch')
+ax[1].axis('
